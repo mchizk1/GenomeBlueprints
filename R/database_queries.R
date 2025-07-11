@@ -67,7 +67,7 @@ ncbi_genome_metadata <- function(taxa){
     term = paste0("txid", ncbi_id, "[Organism:exp]")
   )
   assembly_summaries <- entrez_summary(db = "assembly", id = search_results$ids, version = "2.0")
-  if (length(search_results$ids == 1)) {
+  if (length(search_results$ids) == 1) {
     assembly_summaries <- list(assembly_summaries)
     names(assembly_summaries) <- search_results$ids
   }
@@ -80,7 +80,9 @@ ncbi_genome_metadata <- function(taxa){
       assembly_accession = assembly_summaries[[i]]$assemblyaccession,
       submitterorganization = assembly_summaries[[i]]$submitterorganization,
       assembly_type = assembly_summaries[[i]]$assemblytype,
-      date = assembly_summaries[[i]]$seqreleasedate
+      date = assembly_summaries[[i]]$seqreleasedate,
+      species = assembly_summaries[[i]]$speciesname,
+      speciestaxid = assembly_summaries[[i]]$taxid
     )
     genome_metadata <- bind_rows(genome_metadata, metadata_i)
   }
