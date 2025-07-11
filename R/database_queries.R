@@ -1,0 +1,88 @@
+
+#' Get NCBI genome statistics for a given taxonomic group
+#' 
+#' This function retrieves genome statistics from NCBI for a specified taxonomic group including genome name, total length, and other relevant information.
+#' 
+#' @importFrom taxize get_uid
+#' @importFrom rentrez entrez_search
+#' @importFrom rentrez entrez_summary
+#' @importFrom dplyr filter
+#' @importFrom dplyr mutate
+#' @importFrom dplyr select
+#' @importFrom dplyr bind_rows
+#' 
+#' @param taxa A character string indicating the taxanomic group to query
+#' @return A data.frame containing genome statistics including genome name and physical chromosome lengths
+#' @examples kiwi <- ncbi_genome_stats("Actinidia chinensis")
+#' @export
+
+ncbi_genome_stats <- function(taxa){
+  ncbi_id <- get_uid(taxa)
+  search_results <- entrez_search(
+    db = "assembly",
+    term = paste0("txid", ncbi_id, "[Organism:exp]")
+  )
+  assembly_summaries <- entrez_summary(db = "assembly", id = search_results$ids, version = "2.0")
+  if (length(search_results$ids == 1)) {
+    assembly_summaries <- list(assembly_summaries)
+    names(assembly_summaries) <- search_results$ids
+  }
+  assemblies <- names(assembly_summaries)
+  stats_ftps <- sapply(assemblies, function(x) assembly_summaries[[x]]$ftppath_stats_rpt)
+  chrom_stats <- c()
+  for (i in seq_along(stats_ftps)) {
+    print(paste0("Assembly ", i, ": ", assembly_summaries[[i]]$assemblyname))
+    assembly_i <- read.delim(stats_ftps[i], comment.char="#", header=FALSE) %>%
+      filter(V3 == "Chromosome", V4 == "all", 
+             V5 %in% c("total-length")) %>%
+      mutate(genome = assembly_summaries[[i]]$assemblyname) %>%
+      dplyr::select(V2, V5, V6, genome)
+    chrom_stats <- bind_rows(chrom_stats, assembly_i)
+  }
+  colnames(chrom_stats) <- c("chromosome", "stat", "value", "genome")
+  return(chrom_stats)
+}
+
+#' Get NCBI genome metadata for a given taxonomic group
+#' 
+#' This function retrieves genome assembly metadata from NCBI for a specified taxonomic group including genome name, assembly accession, submitter organization, assembly type, and release date.
+#' 
+#' @importFrom taxize get_uid
+#' @importFrom rentrez entrez_search
+#' @importFrom rentrez entrez_summary
+#' @importFrom dplyr filter
+#' @importFrom dplyr mutate
+#' @importFrom dplyr select
+#' @importFrom dplyr bind_rows
+#' 
+#' @param taxa A character string indicating the taxanomic group to query
+#' @return A list containing genome assembly metadata
+#' @examples kiwi <- ncbi_genome_metadata("Actinidia chinensis")
+#' @export
+
+ncbi_genome_metadata <- function(taxa){
+  ncbi_id <- get_uid(taxa)
+  search_results <- entrez_search(
+    db = "assembly",
+    term = paste0("txid", ncbi_id, "[Organism:exp]")
+  )
+  assembly_summaries <- entrez_summary(db = "assembly", id = search_results$ids, version = "2.0")
+  if (length(search_results$ids == 1)) {
+    assembly_summaries <- list(assembly_summaries)
+    names(assembly_summaries) <- search_results$ids
+  }
+  assemblies <- names(assembly_summaries)
+  genome_metadata <- c()
+  for (i in seq_along(assemblies)) {
+    print(paste0("Assembly ", i, ": ", assembly_summaries[[i]]$assemblyname))
+    metadata_i <- data.frame(
+      genome = assembly_summaries[[i]]$assemblyname,
+      assembly_accession = assembly_summaries[[i]]$assemblyaccession,
+      submitterorganization = assembly_summaries[[i]]$submitterorganization,
+      assembly_type = assembly_summaries[[i]]$assemblytype,
+      date = assembly_summaries[[i]]$seqreleasedate
+    )
+    genome_metadata <- bind_rows(genome_metadata, metadata_i)
+  }
+  return(genome_metadata)
+}

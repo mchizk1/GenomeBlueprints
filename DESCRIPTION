@@ -1,0 +1,25 @@
+Package: genomebluepRints
+Title: Curation and Visualization of Genomic Metadata
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Mason",
+           family = "Chizk",
+           role = c("aut", "cre"),
+           email = "mason@genomeblueprints.com")
+Description: This package provides tools for the curation and visualization of genomic metadata, 
+    including functions to retrieve and manipulate data from various genomic databases.
+License: 
+    MIT + file LICENSE
+Imports: 
+    config,
+    dplyr,
+    echarts4r,
+    golem,
+    leaflet,
+    magrittr,
+    rentrez,
+    shiny,
+    taxize
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.3.2
