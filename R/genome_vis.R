@@ -56,3 +56,42 @@ species_donut <- function(genome_metadata){
             fill = "#333",
             fontSize = 20))))
 }
+
+#' Visualize taxonomic trees relevant to genome data
+#' 
+#' This function creates a radial tree chart to visualize taxonomic relationships relevant to genome data.
+#' 
+#' @param taxonomy A string representing the top level taxonomic group to visualize
+#' @return A tree chart visualizing the taxonomic relationships
+#' @importFrom rotl tnrs_match_names
+#' @importFrom rotl tol_induced_subtree
+#' @export
+
+tax_tree <- function(genome_metadata){
+  taxonomy <- unique(genome_metadata$species)
+  tax_id <- tnrs_match_names(taxonomy)$ott_id
+  # keep only ott ids that are valid in the Tree of Life (ToL)
+  valid_ids <- c()
+  for(i in seq_along(tax_id)) {
+    if(check_valid_ott(tax_id[i])) {
+      valid_ids <- c(valid_ids, tax_id[i])
+    }
+  }
+  tol_tree <- tol_induced_subtree(ott_ids = valid_ids, label_format = "name")
+  return(tol_tree)
+}
+
+#' Check if an OTT ID is valid in the Tree of Life
+#' 
+#' @param ott_id A string representing the OTT ID to check
+#' @return A logical value indicating whether the OTT ID is valid
+#' @importFrom rotl tol_node_info
+
+check_valid_ott <- function(ott_id) {
+  tryCatch({
+    tol_node_info(ott_id = ott_id)
+    TRUE
+  }, error = function(e) {
+    FALSE
+  })
+}

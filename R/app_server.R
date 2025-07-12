@@ -10,20 +10,28 @@ app_server <- function(input, output, session) {
   # create a reactive that updates when input$organism changes
   organism_data <- reactive({
     req(input$organism)
-    # Simulate fetching data based on the selected organism
-    ncbi_genome_stats(input$organism)
+    test_data[[input$organism]]
+  })
+  genome_versions <- reactive({
+    req(input$organism)
+    sort_genomes(organism_data()$stats) %>%
+      genome_consensus()
+  })
+  selected_genome <- reactive({
+    req(input$version)
+    req(genome_versions())
+    genome_versions()[[input$version]]
   })
   output$contents <- renderEcharts4r({
-    req(organism_data())
-    chrom_vis(organism_data())
+    req(selected_genome())
+    chrom_vis(selected_genome())
   })
-  output$map <- renderLeaflet({
-    leaflet() %>%
-      addProviderTiles("CartoDB.Positron") %>% 
-      addCircles(lng = c(-122, 170), lat = c(37, -45), 
-                 label = c("San Francisco", "New Zealand"), 
-                 color = "red", radius = 500000) %>%
-      addPolygons(lng = c(-80, -70, -60), lat = c(10, 20, 10),
-                  fillColor = "blue", weight = 1, opacity = 0.5)
+  output$donut <- renderEcharts4r({
+    req(organism_data())
+    species_donut(organism_data()$metadata)
+  })
+  output$phylo <- renderPlot({
+    req(organism_data())
+    plot(tax_tree(organism_data()$metadata))
   })
 }

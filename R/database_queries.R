@@ -23,7 +23,7 @@ ncbi_genome_stats <- function(taxa){
     term = paste0("txid", ncbi_id, "[Organism:exp]")
   )
   assembly_summaries <- entrez_summary(db = "assembly", id = search_results$ids, version = "2.0")
-  if (length(search_results$ids == 1)) {
+  if (length(search_results$ids) == 1) {
     assembly_summaries <- list(assembly_summaries)
     names(assembly_summaries) <- search_results$ids
   }
@@ -32,11 +32,16 @@ ncbi_genome_stats <- function(taxa){
   chrom_stats <- c()
   for (i in seq_along(stats_ftps)) {
     print(paste0("Assembly ", i, ": ", assembly_summaries[[i]]$assemblyname))
-    assembly_i <- read.delim(stats_ftps[i], comment.char="#", header=FALSE) %>%
-      filter(V3 == "Chromosome", V4 == "all", 
-             V5 %in% c("total-length")) %>%
-      mutate(genome = assembly_summaries[[i]]$assemblyname) %>%
-      dplyr::select(V2, V5, V6, genome)
+    assembly_i <- try(read.delim(stats_ftps[i], comment.char="#", header=FALSE) %>%
+        filter(V3 == "Chromosome", V4 == "all", 
+               V5 %in% c("total-length")) %>%
+        mutate(genome = assembly_summaries[[i]]$assemblyname) %>%
+        dplyr::select(V2, V5, V6, genome)
+    )
+    if(inherits(assembly_i, "try-error")) {
+      warning(paste0("Failed to read assembly statistics for ", assembly_summaries[[i]]$assemblyname, ". Skipping."))
+      next
+    }
     chrom_stats <- bind_rows(chrom_stats, assembly_i)
   }
   colnames(chrom_stats) <- c("chromosome", "stat", "value", "genome")
@@ -87,4 +92,18 @@ ncbi_genome_metadata <- function(taxa){
     genome_metadata <- bind_rows(genome_metadata, metadata_i)
   }
   return(genome_metadata)
+}
+
+#' Assemble complete NCBI stats for one taxonomic group
+#' 
+#' This function combines genome statistics and metadata from NCBI for a specified taxonomic group into a single data frame.
+#' @param taxonomy A character string indicating the taxonomic group to query
+#' @return a list containing genome statistics and metadata
+#' @export
+
+ncbi_genome_stats_and_metadata <- function(taxonomy) {
+  list(
+    stats = ncbi_genome_stats(taxonomy),
+    metadata = ncbi_genome_metadata(taxonomy)
+  )
 }

@@ -18,7 +18,10 @@
 # muscadine_grape <- ncbi_genome_stats("vitis rotundifolia")
 # european_grape <- ncbi_genome_stats("vitis vinifera")
 
+# test_data <- list(
+#   actinidia = ncbi_genome_stats_and_metadata("Actinidia"),
+#   vaccinium = ncbi_genome_stats_and_metadata("Vaccinium"),
+#   rubus = ncbi_genome_stats_and_metadata("Rubus")
+# )
+# usethis::use_data(test_data, internal = TRUE, overwrite = TRUE)
 
-# radiata_pine <- ncbi_genome_stats("pinus radiata")
-# radiata_meta <- ncbi_genome_metadata("pinus radiata")
-# chrom_vis(radiata_pine)

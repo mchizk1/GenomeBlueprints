@@ -17,49 +17,23 @@ app_ui <- function(request) {
           sidebarPanel(
             # Input: dropdown
             selectInput("organism", "Choose a dataset:",
-                        choices = c("Kiwifruit", "pinus radiata", 
-                                    "Muscadine grape", "European grape",
-                                    "Soybean", "Maize", "Wheat", "Potato",
-                                    "Cotton", "Canola", "Rice", "Rubus",
-                                    "Vaccinium", "Sweet cherry", "Sour cherry",
-                                    "Apple"),
-                        selected = "Radiata pine"),
+                        choices = names(test_data),
+                        selected = "actinidia"),
             # Horizontal line
             hr(),
-            selectInput("assembly", "NCBI genome assembly:",
-                        choices = c(
-                          "GCA_000003025.6",
-                          "GCA_000003025.7",
-                          "GCA_000003025.8",
-                          "GCA_000003025.9",
-                          "GCA_000003025.10",
-                          "GCA_000003025.11",
-                          "GCA_000003025.12"
-                        )),
+            selectInput("assembly", "NCBI genome name:",
+                        choices = test_data$actinidia$metadata$genome),
+            selectInput("version", "Version:",
+                        choices = c("v1", "v2", "v3")),
             hr(),
-            selectInput("linkage map", "Anchored linkage map:",
-                        choices = c(
-                          "GCA_000003025.6",
-                          "GCA_000003025.7",
-                          "GCA_000003025.8",
-                          "GCA_000003025.9",
-                          "GCA_000003025.10",
-                          "GCA_000003025.11",
-                          "GCA_000003025.12"
-                        ))
+            plotOutput("phylo", height = "400px")
           ),
           
           # Main panel for displaying outputs
           mainPanel(
-            echarts4rOutput("contents")
+            echarts4rOutput("contents"),
+            echarts4rOutput("donut")
           )
-      ),
-      fluidRow(
-        # leaflet map output
-        column(
-          width = 12,
-          leaflet::leafletOutput("map", height = "600px")
-        )
       )
       )
     )
