@@ -22,7 +22,8 @@ ncbi_genome_stats <- function(taxa, key){
   ncbi_id <- get_uid(taxa)
   search_results <- entrez_search(
     db = "assembly",
-    term = paste0("txid", ncbi_id, "[Organism:exp]")
+    term = paste0("txid", ncbi_id, "[Organism:exp]"),
+    retmax = 1000
   )
   assembly_summaries <- entrez_summary(db = "assembly", id = search_results$ids, version = "2.0")
   if (length(search_results$ids) == 1) {
