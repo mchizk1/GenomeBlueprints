@@ -4,10 +4,12 @@
 \alias{ncbi_genome_metadata}
 \title{Get NCBI genome metadata for a given taxonomic group}
 \usage{
-ncbi_genome_metadata(taxa)
+ncbi_genome_metadata(taxa, key)
 }
 \arguments{
 \item{taxa}{A character string indicating the taxanomic group to query}
+
+\item{key}{An character string for the NCBI API key}
 }
 \value{
 A list containing genome assembly metadata

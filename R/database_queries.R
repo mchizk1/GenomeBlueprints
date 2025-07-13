@@ -12,11 +12,13 @@
 #' @importFrom dplyr bind_rows
 #' 
 #' @param taxa A character string indicating the taxanomic group to query
+#' @param key An character string for the NCBI API key
 #' @return A data.frame containing genome statistics including genome name and physical chromosome lengths
 #' @examples kiwi <- ncbi_genome_stats("Actinidia chinensis")
 #' @export
 
-ncbi_genome_stats <- function(taxa){
+ncbi_genome_stats <- function(taxa, key){
+  set_entrez_key(key)
   ncbi_id <- get_uid(taxa)
   search_results <- entrez_search(
     db = "assembly",
@@ -61,17 +63,22 @@ ncbi_genome_stats <- function(taxa){
 #' @importFrom dplyr bind_rows
 #' 
 #' @param taxa A character string indicating the taxanomic group to query
+#' @param key An character string for the NCBI API key
 #' @return A list containing genome assembly metadata
 #' @examples kiwi <- ncbi_genome_metadata("Actinidia chinensis")
 #' @export
 
-ncbi_genome_metadata <- function(taxa){
+ncbi_genome_metadata <- function(taxa, key){
+  set_entrez_key(key)
   ncbi_id <- get_uid(taxa)
   search_results <- entrez_search(
     db = "assembly",
-    term = paste0("txid", ncbi_id, "[Organism:exp]")
+    term = paste0("txid", ncbi_id, "[Organism:exp]"),
+    retmax = 1000
   )
-  assembly_summaries <- entrez_summary(db = "assembly", id = search_results$ids, version = "2.0")
+  assembly_summaries <- entrez_summary(db = "assembly", 
+                                       id = search_results$ids, 
+                                       version = "2.0")
   if (length(search_results$ids) == 1) {
     assembly_summaries <- list(assembly_summaries)
     names(assembly_summaries) <- search_results$ids
