@@ -14,13 +14,13 @@ app_server <- function(input, output, session) {
   })
   genome_versions <- reactive({
     req(input$organism)
-    sort_genomes(organism_data()$stats) %>%
-      genome_consensus()
+    sort_genomes(organism_data()$stats)
   })
   selected_genome <- reactive({
     req(input$version)
     req(genome_versions())
-    genome_versions()[[input$version]]
+    genome_versions()[[input$version]] %>%
+      genome_consensus()
   })
   output$contents <- renderEcharts4r({
     req(selected_genome())

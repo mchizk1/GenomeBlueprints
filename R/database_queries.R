@@ -6,6 +6,7 @@
 #' @importFrom taxize get_uid
 #' @importFrom rentrez entrez_search
 #' @importFrom rentrez entrez_summary
+#' @importFrom rentrez set_entrez_key
 #' @importFrom dplyr filter
 #' @importFrom dplyr mutate
 #' @importFrom dplyr select
@@ -32,6 +33,7 @@ ncbi_genome_stats <- function(taxa, key){
   }
   assemblies <- names(assembly_summaries)
   stats_ftps <- sapply(assemblies, function(x) assembly_summaries[[x]]$ftppath_stats_rpt)
+  id_ftps <- sapply(assemblies, function(x) assembly_summaries[[x]]$ftppath_assembly_rpt)
   chrom_stats <- c()
   for (i in seq_along(stats_ftps)) {
     print(paste0("Assembly ", i, ": ", assembly_summaries[[i]]$assemblyname))
@@ -39,15 +41,22 @@ ncbi_genome_stats <- function(taxa, key){
         filter(V3 == "Chromosome", V4 == "all", 
                V5 %in% c("total-length")) %>%
         mutate(genome = assembly_summaries[[i]]$assemblyname) %>%
-        dplyr::select(V2, V5, V6, genome)
+        dplyr::select(V2, V5, V6, genome) %>%
+        rename(chromosome = V2)
     )
-    if(inherits(assembly_i, "try-error")) {
+    id_i <- try(read.delim(id_ftps[i], 
+                           comment.char="#", header=FALSE) %>%
+                  filter(V4 == "Chromosome", V2 == "assembled-molecule") %>%
+                  select(V3, V5) %>%
+                  rename(chromosome = V3, genbank_chr_id = V5))
+    if(inherits(assembly_i, "try-error") | inherits(id_i, "try-error")) {
       warning(paste0("Failed to read assembly statistics for ", assembly_summaries[[i]]$assemblyname, ". Skipping."))
       next
     }
+    assembly_i <- left_join(assembly_i, id_i, by = "chromosome")
     chrom_stats <- bind_rows(chrom_stats, assembly_i)
   }
-  colnames(chrom_stats) <- c("chromosome", "stat", "value", "genome")
+  colnames(chrom_stats) <- c("chromosome", "stat", "value", "genome", "chr_id")
   return(chrom_stats)
 }
 
@@ -58,6 +67,7 @@ ncbi_genome_stats <- function(taxa, key){
 #' @importFrom taxize get_uid
 #' @importFrom rentrez entrez_search
 #' @importFrom rentrez entrez_summary
+#' @importFrom rentrez set_entrez_key
 #' @importFrom dplyr filter
 #' @importFrom dplyr mutate
 #' @importFrom dplyr select
@@ -106,12 +116,13 @@ ncbi_genome_metadata <- function(taxa, key){
 #' 
 #' This function combines genome statistics and metadata from NCBI for a specified taxonomic group into a single data frame.
 #' @param taxonomy A character string indicating the taxonomic group to query
+#' @param key An character string for the NCBI API key
 #' @return a list containing genome statistics and metadata
 #' @export
 
-ncbi_genome_stats_and_metadata <- function(taxonomy) {
+ncbi_genome_stats_and_metadata <- function(taxonomy, key) {
   list(
-    stats = ncbi_genome_stats(taxonomy),
-    metadata = ncbi_genome_metadata(taxonomy)
+    stats = ncbi_genome_stats(taxonomy, key),
+    metadata = ncbi_genome_metadata(taxonomy, key)
   )
 }

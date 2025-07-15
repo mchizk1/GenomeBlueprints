@@ -33,24 +33,20 @@ sort_genomes <- function(genome_stats) {
 #' This function generates a consensus genome based on the physical chromosome lengths of multiple genomes.
 #' 
 #' @param genome_sorted A list of sorted genomes, each containing chromosome names and lengths
-#' @return A list of consensus genomes, each with averaged chromosome lengths
+#' @return A consensus genome with averaged chromosome lengths
 #' @importFrom dplyr group_by
 #' @importFrom dplyr summarise
 #' @importFrom dplyr ungroup
 
 genome_consensus <- function(genome_sorted) {
-  genome_consensus <- list()
-  for(i in seq_along(genome_sorted)){
-    if(length(unique(genome_sorted[[i]]$genome)) == 1){
-      genome_consensus[[names(genome_sorted)[i]]] <- genome_sorted[[i]] %>%
-        select(chromosome, value)
-    } else {
-      genome_i <- genome_sorted[[i]] %>%
-        group_by(chromosome) %>%
-        summarise(value = mean(value, na.rm = TRUE)) %>%
-        ungroup()
-      genome_consensus[[names(genome_sorted)[i]]] <- genome_i
-    }
+  if(length(unique(genome_sorted$genome)) == 1){
+    genome_i <- genome_sorted %>%
+      select(chromosome, value)
+  } else {
+    genome_i <- genome_sorted %>%
+      group_by(chromosome) %>%
+      summarise(value = mean(value, na.rm = TRUE)) %>%
+      ungroup()
   }
-  return(genome_consensus)
+  return(genome_i)
 }

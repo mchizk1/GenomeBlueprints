@@ -10,7 +10,7 @@ genome_consensus(genome_sorted)
 \item{genome_sorted}{A list of sorted genomes, each containing chromosome names and lengths}
 }
 \value{
-A list of consensus genomes, each with averaged chromosome lengths
+A consensus genome with averaged chromosome lengths
 }
 \description{
 This function generates a consensus genome based on the physical chromosome lengths of multiple genomes.

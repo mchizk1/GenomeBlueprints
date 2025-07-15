@@ -25,3 +25,4 @@
 # )
 # usethis::use_data(test_data, internal = TRUE, overwrite = TRUE)
 
+# rubus <- ncbi_genome_stats_and_metadata("Rubus", "65616ab544c7cabd7d5937012f92119f3908")

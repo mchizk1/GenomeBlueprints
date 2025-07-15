@@ -4,10 +4,12 @@
 \alias{ncbi_genome_stats_and_metadata}
 \title{Assemble complete NCBI stats for one taxonomic group}
 \usage{
-ncbi_genome_stats_and_metadata(taxonomy)
+ncbi_genome_stats_and_metadata(taxonomy, key)
 }
 \arguments{
 \item{taxonomy}{A character string indicating the taxonomic group to query}
+
+\item{key}{An character string for the NCBI API key}
 }
 \value{
 a list containing genome statistics and metadata
