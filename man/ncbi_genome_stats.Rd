@@ -4,12 +4,14 @@
 \alias{ncbi_genome_stats}
 \title{Get NCBI genome statistics for a given taxonomic group}
 \usage{
-ncbi_genome_stats(taxa, key)
+ncbi_genome_stats(taxa, key, allow_n_chr)
 }
 \arguments{
 \item{taxa}{A character string indicating the taxanomic group to query}
 
 \item{key}{An character string for the NCBI API key}
+
+\item{allow_n_chr}{A numeric vector indicating the range of chromosome counts expected}
 }
 \value{
 A data.frame containing genome statistics including genome name and physical chromosome lengths

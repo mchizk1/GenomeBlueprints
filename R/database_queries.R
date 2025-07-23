@@ -14,11 +14,12 @@
 #' 
 #' @param taxa A character string indicating the taxanomic group to query
 #' @param key An character string for the NCBI API key
+#' @param allow_n_chr A numeric vector indicating the range of chromosome counts expected
 #' @return A data.frame containing genome statistics including genome name and physical chromosome lengths
 #' @examples kiwi <- ncbi_genome_stats("Actinidia chinensis")
 #' @export
 
-ncbi_genome_stats <- function(taxa, key){
+ncbi_genome_stats <- function(taxa, key, allow_n_chr){
   set_entrez_key(key)
   ncbi_id <- get_uid(taxa)
   search_results <- entrez_search(
@@ -38,9 +39,10 @@ ncbi_genome_stats <- function(taxa, key){
   for (i in seq_along(stats_ftps)) {
     print(paste0("Assembly ", i, ": ", assembly_summaries[[i]]$assemblyname))
     assembly_i <- try(read.delim(stats_ftps[i], comment.char="#", header=FALSE) %>%
-        filter(V3 == "Chromosome", V4 == "all", 
+        filter(V3 == "Chromosome", V4 == "all",
                V5 %in% c("total-length")) %>%
-        mutate(genome = assembly_summaries[[i]]$assemblyname) %>%
+        mutate(genome = assembly_summaries[[i]]$assemblyname,
+               V2 = sub("^0+", "", as.character(V2))) %>%
         dplyr::select(V2, V5, V6, genome) %>%
         rename(chromosome = V2)
     )
@@ -48,13 +50,18 @@ ncbi_genome_stats <- function(taxa, key){
                            comment.char="#", header=FALSE) %>%
                   filter(V4 == "Chromosome", V2 == "assembled-molecule") %>%
                   select(V3, V5) %>%
-                  rename(chromosome = V3, genbank_chr_id = V5))
-    if(inherits(assembly_i, "try-error") | inherits(id_i, "try-error")) {
+                  rename(chromosome = V3, genbank_chr_id = V5) %>%
+                  mutate(chromosome = sub("^0+", "", as.character(chromosome))))
+    if(inherits(assembly_i, "try-error") | inherits(id_i, "try-error") | nrow(id_i) == 0 | nrow(assembly_i) == 0){
       warning(paste0("Failed to read assembly statistics for ", assembly_summaries[[i]]$assemblyname, ". Skipping."))
       next
     }
     assembly_i <- left_join(assembly_i, id_i, by = "chromosome")
-    chrom_stats <- bind_rows(chrom_stats, assembly_i)
+    if(nrow(assembly_i) %in% allow_n_chr){
+      chrom_stats <- bind_rows(chrom_stats, assembly_i)
+    } else if (nrow(assembly_i) != 0) {
+      warning(paste0("Assembly ", assembly_summaries[[i]]$assemblyname, " has ", nrow(assembly_i), " chromosomes, which is not in the allowed range. Skipping."))
+    }
   }
   colnames(chrom_stats) <- c("chromosome", "stat", "value", "genome", "chr_id")
   return(chrom_stats)
@@ -117,12 +124,22 @@ ncbi_genome_metadata <- function(taxa, key){
 #' This function combines genome statistics and metadata from NCBI for a specified taxonomic group into a single data frame.
 #' @param taxonomy A character string indicating the taxonomic group to query
 #' @param key An character string for the NCBI API key
+#' @param allow_n_chr A numeric vector indicating the range of chromosome counts expected
 #' @return a list containing genome statistics and metadata
 #' @export
 
-ncbi_genome_stats_and_metadata <- function(taxonomy, key) {
+ncbi_genome_stats_and_metadata <- function(taxonomy, key, allow_n_chr) {
+  stats <- ncbi_genome_stats(taxonomy, key, allow_n_chr)
+  metadata <- ncbi_genome_metadata(taxonomy, key)
+  if(length(unique(metadata$genome)) > length(unique(stats$genome))) {
+    dropped <- setdiff(unique(metadata$genome), unique(stats$genome))
+    warning(paste0("The following non chromosome-level assemblies were dropped: ", 
+                    paste(dropped, collapse = ", ")))
+  }
+  metadata <- mutate(metadata, taxonomic_group = taxonomy) %>%
+    filter(genome %in% stats$genome)
   list(
-    stats = ncbi_genome_stats(taxonomy, key),
-    metadata = ncbi_genome_metadata(taxonomy, key)
+    stats = stats,
+    metadata = metadata
   )
 }
