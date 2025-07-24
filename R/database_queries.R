@@ -52,7 +52,10 @@ ncbi_genome_stats <- function(taxa, key, allow_n_chr){
                   select(V3, V5) %>%
                   rename(chromosome = V3, genbank_chr_id = V5) %>%
                   mutate(chromosome = sub("^0+", "", as.character(chromosome))))
-    if(inherits(assembly_i, "try-error") | inherits(id_i, "try-error") | nrow(id_i) == 0 | nrow(assembly_i) == 0){
+    if (is.null(assembly_i) || is.null(id_i)) {
+      warning(paste0("Failed to read assembly statistics for ", assembly_summaries[[i]]$assemblyname, ". Skipping."))
+      next
+    } else if(inherits(assembly_i, "try-error") | inherits(id_i, "try-error") | nrow(id_i) == 0 | nrow(assembly_i) == 0){
       warning(paste0("Failed to read assembly statistics for ", assembly_summaries[[i]]$assemblyname, ". Skipping."))
       next
     }
