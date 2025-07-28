@@ -3,42 +3,52 @@
 #' @param request Internal parameter for `{shiny}`.
 #'     DO NOT REMOVE.
 #' @import shiny
+#' @import bslib
 #' @noRd
-app_ui <- function(request) {
-  tagList(
-    # Leave this function for adding external resources
-    golem_add_external_resources(),
-    # Your application UI logic
-    fluidPage(
-      titlePanel("Genome Blueprints"),
-      fluidRow(
-        # Sidebar layout with input and output definitions
-        sidebarLayout(
-          sidebarPanel(
-            # Input: dropdown
-            selectInput("organism", "Choose a dataset:",
-                        choices = names(test_data),
-                        selected = "actinidia"),
-            # Horizontal line
-            hr(),
-            selectInput("assembly", "NCBI genome name:",
-                        choices = test_data$actinidia$metadata$genome),
-            selectInput("version", "Version:",
-                        choices = c("v1", "v2", "v3")),
-            hr(),
-            plotOutput("phylo", height = "400px")
-          ),
-          
-          # Main panel for displaying outputs
-          mainPanel(
-            echarts4rOutput("contents"),
-            echarts4rOutput("donut")
-          )
-      )
+
+# === Sample data for dropdown ===
+available_genomes <- c("GenomeA", "GenomeB", "GenomeC", "GenomeD")
+# === UI ===
+app_ui <- page_fluid(
+  theme = bs_theme(
+    version = 5,
+    bootswatch = "flatly",  # or "simplex", "minty", "yeti", etc.
+    base_font = font_google("Open Sans"),
+    heading_font = font_google("Roboto Slab")
+  ),
+  
+  layout_sidebar(
+    sidebar = sidebar(
+      h4("Genome Filters"),
+      selectInput("genus_filter", "Genus",
+                  choices = c("All", "Genus1", "Genus2", "Genus3"),
+                  selected = "All"),
+      selectInput("species_filter", "Species",
+                  choices = c("All", "Species1", "Species2", "Species3"),
+                  selected = "All"),
+      tags$hr(),
+      h4("Chromosome View"),
+      selectInput("focused_genome", NULL,
+                  choices = available_genomes,
+                  selected = available_genomes[1],
+                  multiple = TRUE)
+    ),
+    
+    layout_column_wrap(
+      width = 1,
+      card(
+        full_screen = TRUE,
+        card_header("Genome Lexicon"),
+        girafeOutput("alluvial_plot", height = "500px")
+      ),
+      card(
+        full_screen = TRUE,
+        card_header("Scaled Chromosome Map"),
+        plotOutput("chr_map", height = "600px")
       )
     )
   )
-}
+)
 
 #' Add external Resources to the Application
 #'

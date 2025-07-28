@@ -22,9 +22,10 @@
 ncbi_genome_stats <- function(taxa, key, allow_n_chr){
   set_entrez_key(key)
   ncbi_id <- get_uid(taxa)
+  query <- paste(paste0("txid", ncbi_id, "[Organism:exp]"), collapse = " OR ")
   search_results <- entrez_search(
     db = "assembly",
-    term = paste0("txid", ncbi_id, "[Organism:exp]"),
+    term = query,
     retmax = 1000
   )
   assembly_summaries <- entrez_summary(db = "assembly", id = search_results$ids, version = "2.0")
@@ -52,10 +53,10 @@ ncbi_genome_stats <- function(taxa, key, allow_n_chr){
                   select(V3, V5) %>%
                   rename(chromosome = V3, genbank_chr_id = V5) %>%
                   mutate(chromosome = sub("^0+", "", as.character(chromosome))))
-    if (is.null(assembly_i) || is.null(id_i)) {
+    if (is.null(assembly_i) || is.null(id_i) || length(assembly_i) == 0 || length(id_i) == 0) {
       warning(paste0("Failed to read assembly statistics for ", assembly_summaries[[i]]$assemblyname, ". Skipping."))
       next
-    } else if(inherits(assembly_i, "try-error") | inherits(id_i, "try-error") | nrow(id_i) == 0 | nrow(assembly_i) == 0){
+    } else if(inherits(assembly_i, "try-error") | inherits(id_i, "try-error")){
       warning(paste0("Failed to read assembly statistics for ", assembly_summaries[[i]]$assemblyname, ". Skipping."))
       next
     }

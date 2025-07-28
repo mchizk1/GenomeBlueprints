@@ -11,9 +11,11 @@ Description: This package provides tools for the curation and visualization of g
 License: 
     MIT + file LICENSE
 Imports: 
+    bslib,
     config,
     dplyr,
     echarts4r,
+    ggiraph,
     golem,
     leaflet,
     magrittr,

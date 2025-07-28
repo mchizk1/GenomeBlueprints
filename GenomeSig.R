@@ -12,13 +12,14 @@ get_genome_sigs <- function(metadata, stats){
                   command, "; sourmash sig cat -o ", i, ".sig.gz ",
                   paste0(paste0(chromosomes, ".sig.gz"), collapse = " "), "; ",
                   paste(paste0("rm ", chromosomes, ".sig.gz"), collapse = "; "), 
-                  "; exit'"))
+                  "; exit'; wsl --shutdown"))
   }
 }
 
 compare_genome_sigs <- function(stats) {
   genomes <- str_remove(list.files(), "\\.sig\\.gz$") %>%
     sort()
+  genomes <- genomes[!str_detect(genomes, "^gather_")]
   #metadata <- filter(metadata, genome %in% genomes)
   stats <- filter(stats, genome %in% genomes)
   #genome1 <- paste0(metadata$genome[1], ".sig.gz")
@@ -30,7 +31,7 @@ compare_genome_sigs <- function(stats) {
                      paste(genome1, genome2, collapse = " "))
     print(paste("Comparing signatures for: ", genomes[i], " against ", genomes[1]))
     system(paste0("wsl bash -lc 'source ~/.bashrc; conda activate blueprint; ",
-                  command, "; exit'"))
+                  command, "; exit' ; wsl --shutdown"))
     # Set path to the folder containing the CSV files
     csv_folder <- paste0("gather_", genome1, "/")
     # List all .csv files in the folder
@@ -65,7 +66,7 @@ compare_genome_sigs <- function(stats) {
       all_gathers <- group_by(all_gathers, match) %>%
         filter(overlap == max(overlap))
     }
-    system(paste0("wsl rm -r ", csv_folder))
+    system(paste0("wsl rm -r ", csv_folder, "; wsl --shutdown"))
     alignments <- bind_rows(alignments, all_gathers)
   }
   alignments$match_chr_name <- stats$chromosome[match(alignments$match, stats$chr_id)]
@@ -73,8 +74,8 @@ compare_genome_sigs <- function(stats) {
   return(alignments)
 }
 
-get_genome_sigs(capsicum$stats)
-matches <- compare_genome_sigs(vaccinium$metadata, vaccinium$stats)
+get_genome_sigs(citrus$metadata, citrus$stats)
+matches <- compare_genome_sigs(potato$stats)
 
 expand_chr_names <- function(matches){
   genomes <- unique(c(matches$genome1, matches$genome2))
@@ -120,22 +121,29 @@ map_chromosomes <- function(matches){
   expanded <- expand_chr_names(matches) 
   orientation <- expand_orientation(matches)
   full <- full_join(expanded, orientation, by=c("HOM", "genome"))
+  genome_order_patterns <- full %>%
+    arrange(genome, HOM) %>%
+    group_by(genome) %>%
+    summarise(order_pattern = paste(chromosome, collapse = "-")) %>%
+    ungroup()
+  full <- left_join(full, genome_order_patterns, by = c("genome")) %>%
+    mutate(genome = factor(genome, levels = unique(genome[order(order_pattern)])))
   return(full)
 }
 
-plot_mapping <- function(chromosome_maps){
-  ggplot(full,
+plot_mapping <- function(chromosome_maps, taxon_name = ""){
+  ggplot(chromosome_maps,
          aes(x = genome, stratum = chromosome, alluvium = HOM,
-             fill = HOM, label = paste0(chromosome, " ", orientation))) +
+             fill = HOM, label = paste0(chromosome, "\n", orientation))) +
     geom_flow(stat = "alluvium", lode.guidance = "frontback", alpha = 0.7) +
     geom_stratum() +
     geom_text(stat = "stratum", size = 3) +
     theme_minimal() +
-    ggtitle("Blueberry Chromosome Mapping Across Reference Assemblies") +
+    ggtitle(paste0(taxon_name, " Chromosome Mapping Across Reference Assemblies")) +
     theme(legend.position = "none",
           axis.text.x = element_text(angle = 45, hjust = 1),
           plot.title = element_text(hjust = 0.5))
 }
 
 test <- map_chromosomes(matches)
-plot_mapping(test)
+plot_mapping(test, "Capsicum")
