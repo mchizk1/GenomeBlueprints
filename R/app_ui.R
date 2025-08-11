@@ -1,3 +1,7 @@
+#=======================================
+# THIS IS CURRENTLY JUST A PLACEHOLDER
+#=======================================
+
 #' The application User-Interface
 #'
 #' @param request Internal parameter for `{shiny}`.

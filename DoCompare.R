@@ -1,3 +1,7 @@
+#===============================================================
+# THIS FILE IS A QUICK PLACEHOLDER FOR RUNNING BULK COMPARISONS
+#===============================================================
+
 genera <- list.files()
 inputs <- data.frame(taxon =c("vaccinium",
                               "rubus",

@@ -95,3 +95,28 @@ check_valid_ott <- function(ott_id) {
     FALSE
   })
 }
+
+#' Plot alluvial diagram for chromosome mapping
+#' 
+#' @param chromosome_maps A data frame containing chromosome mapping data with columns for genome, chromosome, HOM, and HOM_chr
+#' @param taxon_name A string representing the name of the taxon for the plot title
+#' @return A ggplot object visualizing the chromosome mapping
+#' @import ggplot2
+#' @import ggalluvial
+#' @importFrom dplyr distinct
+#' @export
+
+plot_mapping <- function(chromosome_maps, taxon_name = ""){
+  ggplot(distinct(chromosome_maps),
+         aes(x = genome, stratum = chr, alluvium = HOM,
+             fill = HOM_chr, label = chr)) +
+    geom_flow(stat = "alluvium", lode.guidance = "frontback", aes(stratum = chromosome)) +
+    #scale_fill_brewer(type = "qual", palette = "Set2") +
+    geom_stratum(aes(stratum = chr)) +
+    geom_text(stat = "stratum", size = 3) +
+    theme_minimal() +
+    ggtitle(paste0(taxon_name, " Chromosome Mapping Across Reference Assemblies")) +
+    theme(legend.position = "none",
+          axis.text.x = element_text(angle = 45, hjust = 1),
+          plot.title = element_text(hjust = 0.5))
+}

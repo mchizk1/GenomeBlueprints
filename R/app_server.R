@@ -1,3 +1,7 @@
+#=======================================
+# THIS IS CURRENTLY JUST A PLACEHOLDER
+#=======================================
+
 #' The application server-side
 #'
 #' @param input,output,session Internal parameters for {shiny}.

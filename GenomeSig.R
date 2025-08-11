@@ -1,3 +1,14 @@
+#=======================================
+# Signature Comparisons
+#=======================================
+
+# These functions are isolated from the package architecture because
+# they should only be safely run with very specific evironmental configurations and
+# dependencies are not enforced inside the package. They 'shell out' to a wsl session 
+# with a conda environment activated. Next it runs a couple custom bash scripts.
+
+# This approach integrates a bioinformatic pipeline with post processing in R.
+
 library(tidyverse)
 library(genomebluepRints)
 library(ggalluvial)
@@ -51,21 +62,14 @@ compare_genome_sigs <- function(stats) {
         query = str_remove(query_filename, "\\.part_[12]\\.fasta"),
         match = str_remove(match, "\\.part_[12]")
       ) %>%
-      group_by(query, match)  %>%
-      summarise(
-        overlap = sum(overlap),
-        p_query = mean(p_query),
-        p_match = mean(p_match),
-        orientation = ifelse(sum(query_part == match_part) == 2, "▲", "▼"),
-      ) %>%
       ungroup() %>%
       mutate(genome1 = genomes[1],
              genome2 = genomes[i])
     # Check for duplicates and keep the one with the maximum overlap
-    if (length(all_gathers$match) != length(unique(all_gathers$match))) {
-      all_gathers <- group_by(all_gathers, match) %>%
-        filter(overlap == max(overlap))
-    }
+    # if (length(all_gathers$match) != length(unique(all_gathers$match))) {
+    #   all_gathers <- group_by(all_gathers, match) %>%
+    #     filter(overlap == max(overlap))
+    # }
     system(paste0("wsl rm -r ", csv_folder, "; wsl --shutdown"))
     alignments <- bind_rows(alignments, all_gathers)
   }
@@ -74,76 +78,24 @@ compare_genome_sigs <- function(stats) {
   return(alignments)
 }
 
-get_genome_sigs(citrus$metadata, citrus$stats)
-matches <- compare_genome_sigs(potato$stats)
-
-expand_chr_names <- function(matches){
-  genomes <- unique(c(matches$genome1, matches$genome2))
-  genomes_split <- split(matches, matches$genome2)
-  test <- sapply(genomes_split, function(x){
-    as.character(x$match_chr_name)
-  })
-  expanded <- cbind(unlist(genomes_split[[1]][,10]), test)
-  colnames(expanded) <- c(genomes[1], colnames(test))
-  rownames(expanded) <- NULL
-  expanded <- as.data.frame(expanded) %>%
-    mutate(HOM = as.character(row_number())) %>%
-    relocate(HOM)
-  long_matches <- expanded %>%
-    pivot_longer(names_to = "genome",
-                 values_to = "chromosome",
-                 cols = colnames(expanded)[-1]) %>%
-    mutate(chromosome = factor(chromosome, 
-                               levels = str_sort(unique(chromosome), numeric = TRUE)))
-  return(long_matches)
-}
-
-expand_orientation <- function(matches){
-  genomes <- unique(c(matches$genome1, matches$genome2))
-  genomes_split <- split(matches, matches$genome2)
-  test <- sapply(genomes_split, function(x){
-    x$orientation
-  })
-  expanded <- cbind(unlist(genomes_split[[1]][,6]), test)
-  rownames(expanded) <- NULL
-  colnames(expanded) <- c(genomes[1], colnames(test))
-  expanded <- as.data.frame(expanded) %>%
-    mutate(HOM = as.character(row_number())) %>%
-    relocate(HOM)
-  long_matches <- expanded %>%
-    pivot_longer(names_to = "genome",
-                 values_to = "orientation",
-                 cols = colnames(expanded)[-1])
-  return(long_matches)
-}
-
-map_chromosomes <- function(matches){
-  expanded <- expand_chr_names(matches) 
-  orientation <- expand_orientation(matches)
-  full <- full_join(expanded, orientation, by=c("HOM", "genome"))
-  genome_order_patterns <- full %>%
-    arrange(genome, HOM) %>%
-    group_by(genome) %>%
-    summarise(order_pattern = paste(chromosome, collapse = "-")) %>%
-    ungroup()
-  full <- left_join(full, genome_order_patterns, by = c("genome")) %>%
-    mutate(genome = factor(genome, levels = unique(genome[order(order_pattern)])))
-  return(full)
-}
-
-plot_mapping <- function(chromosome_maps, taxon_name = ""){
-  ggplot(chromosome_maps,
-         aes(x = genome, stratum = chromosome, alluvium = HOM,
-             fill = HOM, label = paste0(chromosome, "\n", orientation))) +
-    geom_flow(stat = "alluvium", lode.guidance = "frontback", alpha = 0.7) +
-    geom_stratum() +
-    geom_text(stat = "stratum", size = 3) +
-    theme_minimal() +
-    ggtitle(paste0(taxon_name, " Chromosome Mapping Across Reference Assemblies")) +
-    theme(legend.position = "none",
-          axis.text.x = element_text(angle = 45, hjust = 1),
-          plot.title = element_text(hjust = 0.5))
-}
-
-test <- map_chromosomes(matches)
-plot_mapping(test, "Capsicum")
+#====================
+# Code for testing...
+#====================
+# get_genome_sigs(apple$metadata, apple$stats)
+# matches <- compare_genome_sigs(test_grape)
+# matches <- compare_genome_sigs_ortn(test_grape)
+# matches2 <- na.omit(matches) %>%
+#   mutate(match_chr_name = paste0(match_chr_name, "_", match_part),
+#          query_chr_name = paste0(query_chr_name, "_", query_part)) %>%
+#   ungroup() %>%
+#   map_chromosomes_ortn() 
+# 
+# grape_test <- is_lodes_form(chromosome_maps, genome, chr, HOM)
+# 
+# is_lodes_form(distinct(chromosome_maps), genome, chr, HOM)
+# to_alluvia_form(chromosome_maps, genome, chr, HOM_chr)
+# is_lodes_form(chromosome_maps, genome, chr, HOM)
+# plot_mapping_ortn(matches2, "Vitis")
+# 
+# test <- map_chromosomes(brambles)
+# plot_mapping(test, "Vitis")
