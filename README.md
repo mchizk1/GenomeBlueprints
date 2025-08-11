@@ -6,6 +6,19 @@ The primary objective is to bridge gaps between genomic research silos with a fo
 Currently, this project is in its early stages of development, but I hope to see it grow with feedback into a useful community project that 
 helps to bridge insights across independent research communities.
 
+## Installation
+This project is mostly written in R, but also has some bash scripts for running bioinformatics tools. The bulk of R code is contained within 
+the R/ directory, and may be installed as an R package using the following commands:
+
+```R
+# Install devtools if you haven't already
+install.packages("devtools")
+# Install GenomeBlueprints from GitHub
+devtools::install_github("mchizk1/genomebluepRints")
+```
+
+**NOTE:** The R and bash files in the top-level directory are currently set up for development and testing purposes only.
+
 ## Current Features
 - **NCBI Genome Queries**: A module for retrieving bulk queries of genome fasta files and their metadata from NCBI.
 - **Genome Signatures**: A module for generating genome signatures from fasta files, which are used for comparing genomes. 
