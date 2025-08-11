@@ -39,7 +39,7 @@ gather_multi_queries() {
         sourmash gather "$sig" "$db" -o "gather_${query_sig}/${base}_${db}.csv"
     done
 
-    echo "🏁 All done, your grace. Results lie within 'gather_${query_sig}/'."
+    echo "🏁 All done. Results stored in 'gather_${query_sig}/'."
 }
 
 # Invoke the function if script is run directly
