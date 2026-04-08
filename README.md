@@ -48,6 +48,23 @@ Do not hardcode API keys in scripts. Set your key in the environment first:
 export ENTREZ_KEY="your_key_here"
 ```
 
+## Efficiency and Safety Modes
+
+The API pipeline now supports opt-in efficiency controls while preserving default behavior.
+
+```R
+kiwi <- ncbi_genome_stats_and_metadata(
+  taxonomy = "Actinidia chinensis",
+  key = Sys.getenv("ENTREZ_KEY"),
+  allow_n_chr = 29,
+  use_cache = TRUE,
+  use_parallel = FALSE,
+  workers = 2
+)
+```
+
+See `docs/PHASED_OVERHAUL.md` for phased rollout guidance and validation checkpoints.
+
 ## Current Features
 - **NCBI Genome Queries**: A module for retrieving bulk queries of genome fasta files and their metadata from NCBI.
 - **Genome Signatures**: A module for generating genome signatures from fasta files, which are used for comparing genomes. 

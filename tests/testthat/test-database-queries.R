@@ -1,6 +1,6 @@
 test_that("ncbi_genome_stats_and_metadata drops unmatched metadata genomes", {
   local_mocked_bindings(
-    ncbi_genome_stats = function(taxonomy, key, allow_n_chr) {
+    ncbi_genome_stats = function(taxa, key, allow_n_chr, ...) {
       data.frame(
         chromosome = c("1", "2"),
         stat = c("total-length", "total-length"),
@@ -9,7 +9,7 @@ test_that("ncbi_genome_stats_and_metadata drops unmatched metadata genomes", {
         chr_id = c("chrA1", "chrA2")
       )
     },
-    ncbi_genome_metadata = function(taxonomy, key) {
+    ncbi_genome_metadata = function(taxa, key, ...) {
       data.frame(
         genome = c("GenomeA", "GenomeB"),
         assembly_accession = c("A1", "B1"),
