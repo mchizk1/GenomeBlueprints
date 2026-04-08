@@ -14,10 +14,39 @@ the R/ directory, and may be installed as an R package using the following comma
 # Install devtools if you haven't already
 install.packages("devtools")
 # Install GenomeBlueprints from GitHub
-devtools::install_github("mchizk1/genomebluepRints")
+devtools::install_github("mchizk1/GenomeBlueprints")
 ```
 
-**NOTE:** The R and bash files in the top-level directory are currently set up for development and testing purposes only.
+## Quick Start
+
+### Package functions (stable path)
+
+```R
+library(genomebluepRints)
+key <- Sys.getenv("ENTREZ_KEY")
+
+kiwi <- ncbi_genome_stats_and_metadata(
+  taxonomy = "Actinidia chinensis",
+  key = key,
+  allow_n_chr = 29
+)
+```
+
+### Experimental pipeline scripts
+
+Experimental workflow helpers now live under `scripts/` and require a local WSL + conda setup with:
+
+- `edirect` (`efetch`)
+- `seqkit`
+- `sourmash`
+
+### API key setup
+
+Do not hardcode API keys in scripts. Set your key in the environment first:
+
+```bash
+export ENTREZ_KEY="your_key_here"
+```
 
 ## Current Features
 - **NCBI Genome Queries**: A module for retrieving bulk queries of genome fasta files and their metadata from NCBI.
